@@ -3,21 +3,14 @@ import os
 from dotenv import load_dotenv
 import asyncio
 import platform
-
-# Langchain imports for document processing, embeddings, and LLM
 from langchain_community.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
 from langchain_community.vectorstores import FAISS # Changed from Chroma to FAISS
 from langchain.chains import ConversationalRetrievalChain
 from langchain.memory import ConversationBufferMemory
-
-# Load environment variables from .env file
 load_dotenv()
 
-# Set up the Google API Key
-# Ensure you have GOOGLE_API_KEY set in your environment variables or a .env file
-# Example: GOOGLE_API_KEY="YOUR_API_KEY_HERE"
 if "GOOGLE_API_KEY" not in os.environ:
     st.error("GOOGLE_API_KEY environment variable not found. Please set it.")
     st.stop()
@@ -28,7 +21,6 @@ if "GOOGLE_API_KEY" not in os.environ:
 if platform.system() == "Windows":
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
-# --- Initialize Langchain Components ---
 
 @st.cache_resource
 def get_text_splitter():
@@ -41,10 +33,6 @@ def get_text_splitter():
 
 @st.cache_resource
 def get_embeddings_model():
-    """
-    Initializes and returns the Google Generative AI Embeddings model.
-    Includes asyncio loop handling to prevent RuntimeError in certain environments.
-    """
     try:
         asyncio.get_running_loop()
     except RuntimeError:
@@ -55,10 +43,7 @@ def get_embeddings_model():
 
 @st.cache_resource
 def get_llm():
-    """
-    Initializes and returns the Google Generative AI Chat model.
-    Using 'gemini-1.5-flash' as it's generally more broadly available.
-    """
+   
     return ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0.3)
 
 def get_vector_store(text_chunks, embeddings_model):
@@ -71,11 +56,7 @@ def get_vector_store(text_chunks, embeddings_model):
     return FAISS.from_documents(text_chunks, embeddings_model) # Changed from Chroma to FAISS
 
 def get_conversation_chain(vector_store, llm):
-    """
-    Creates and returns a conversational retrieval chain.
-    This chain takes a question, retrieves relevant documents, and generates a response
-    while maintaining chat history.
-    """
+    
     memory = ConversationBufferMemory(memory_key='chat_history', return_messages=True)
     conversation_chain = ConversationalRetrievalChain.from_llm(
         llm=llm,
@@ -84,10 +65,9 @@ def get_conversation_chain(vector_store, llm):
     )
     return conversation_chain
 
-# --- Streamlit UI ---
 
 st.set_page_config(page_title="PDF Chatbot with Gemini & FAISS", layout="wide")
-st.title("📄 PDF Chatbot powered by Gemini & FAISS") # Updated title
+st.title("PDF Chatbot powered by Gemini & FAISS")
 st.markdown("Upload a PDF document and start asking questions about its content!")
 
 # Sidebar for PDF upload
